@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     min_freq = 0.001
     max_freq = 0.09
-    load_manual = True
+    load_manual = False
     with open(items_filename,'rb') as fp:
         items = json.load(fp)
     data = []
@@ -163,8 +163,8 @@ if __name__ == '__main__':
 
         scores = {}
         for c in model:
-            #scores[c] = sum(({k: v*model[c][k] for k,v in vec.iteritems()}).values())
-            scores[c] = reduce(mul,(({k: v*(model[c][k]+alphas[c]) for k,v in vec.iteritems()}).values()))
+            scores[c] = sum(({k: v*(model[c][k]+alphas[c]) for k,v in vec.iteritems()}).values())
+            #scores[c] = reduce(mul,(({k: v*(model[c][k]+alphas[c]) for k,v in vec.iteritems()}).values()))
         scores = sorted([(v,k) for k,v in scores.iteritems()])[::-1]
         return scores
     top_1 = 0
