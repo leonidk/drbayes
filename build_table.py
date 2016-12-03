@@ -126,10 +126,6 @@ if __name__ == '__main__':
     for c,v in prob.iteritems():
         for word,weight in v.iteritems():
             prob[c][word] = math.log(weight+alpha)
-            #alphas[c] = math.log(alpha)
-    #theta = {c: {word: math.log((weight+alpha)/(total_counts[c]+alpha*n))\
-    #            for word,weight in vec.iteritems()} \
-    #            for c,vec in prob.iteritems()}
     theta = prob
     def returnScores(text,tkn,model,idf,alphas):
         tokens = [x for x in tkn.run(text) if x in valid_words]
@@ -142,10 +138,10 @@ if __name__ == '__main__':
 
         scores = {}
         for c in model:
-            scores[c] = sum(({k: v*(model[c][k]+normz[c]) for k,v in vec.iteritems()}).values())
-            #scores[c] = sum(({k: v*(model[c][k]+alphas[c]) for k,v in vec.iteritems()}).values())
-            #scores[c] = reduce(mul,(({k: v*(model[c][k]+alphas[c]) for k,v in vec.iteritems()}).values()))
-        scores = sorted([(v,k) for k,v in scores.iteritems()])[::-1]
+            scores[c] = sum([vec[k]*(model[c][k]+normz[c]) for k in vec])
+        expsum = sum([math.exp(x) for x in scores.values()])
+        total_score = math.log(expsum) if expsum != 0  else 0.0
+        scores = sorted([(math.exp(v-total_score),k) for k,v in scores.iteritems()])[::-1]
         return scores
     for load_manual in [True,False]:
         if load_manual:
