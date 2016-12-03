@@ -4,6 +4,8 @@ import re
 import math
 from collections import defaultdict
 from operator import mul
+import gzip
+
 
 if __name__ == '__main__':
     items_filename = 'items_all.json'
@@ -174,5 +176,13 @@ if __name__ == '__main__':
                 total+=1
         dataset = 'manual' if load_manual else 'wiki'
         print "{2}\t{0:.2f}\t{1:.2f}".format(float(top_1)/total,float(top_5)/total,dataset)
+        for c in theta:
+            bad_w = []
+            for w in theta[c]:
+                if theta[c][w] == 0.0:
+                    bad_w.append(w)
+            for w in bad_w:
+                theta[c].pop(w, None)
 
-
+        with gzip.open('data_table.json.gz','wb') as fp:
+            fp.write(json.dumps({'idf':idf,'prob':theta,'norm':normz},sort_keys=True,indent=4, separators=(',', ': ')))
