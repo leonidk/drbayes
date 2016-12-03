@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     min_freq = 0.001
     max_freq = 0.09
-    with open(items_filename,'rb') as fp:
+    with open(items_filename,mode='rt') as fp:
         items = json.load(fp)
     data = []
     # extract descriptions
@@ -29,9 +29,9 @@ if __name__ == '__main__':
         def getTextFromWikiItem(item):
             text = ""
             for section in [(item['articleTitle'], item['mainSectionText'])] + item['subSections']:
-                text = text + section[0] + u'\n'
+                text = text + section[0] + '\n'
                 for paragraph in section[1]:
-                    text = text + paragraph + u'\n'
+                    text = text + paragraph + '\n'
             return text
         data.append((name.lower(), '\n'.join(fb['sym']), '\n'.join(mayo['symptoms']), getTextFromWikiItem(wiki)))
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         def __init__(self):
             self.pattern = re.compile(r'(?u)\b\w\w+\b')
             self.filter = re.compile('.*[a-zA-z]+.*')
-            with open('stop.json', 'rb') as fp:
+            with open('stop.json', 'rt') as fp:
                 d = json.load(fp)
                 generalStopWords = d['gen']
                 medicalStopWords = d['med']
@@ -95,11 +95,11 @@ if __name__ == '__main__':
     for doc in train_data:
         for x in set(tkn.run(doc)):
             word_count[x] += 1.0
-    valid = {k:v for k,v in word_count.iteritems()\
+    valid = {k:v for k,v in word_count.items()\
                    if (v >= min_freq*num_doc) and (v <= max_freq*num_doc)}
-    valid_words = valid.keys()
+    valid_words = list(valid.keys())
     #build idf
-    idf = {k:math.log((1.0+num_doc)/v+1.0)+1.0 for k,v in valid.iteritems()}
+    idf = {k:math.log((1.0+num_doc)/v+1.0)+1.0 for k,v in valid.items()}
     # build tf
     tf = []
     for doc in train_data:
@@ -112,21 +112,21 @@ if __name__ == '__main__':
 
         tf.append(res)
     
-    print len(word_count), len(valid_words)
+    print(len(word_count), len(valid_words))
 
     # learn a classifier
     n = len(valid_words)
     alpha = 1.0
     prob = defaultdict(lambda: defaultdict(float))
     for lbl,tfi in zip(train_label,tf):
-        vec = {k: v*idf[k] for k,v in tfi.iteritems()}
-        for word,v in vec.iteritems():
+        vec = {k: v*idf[k] for k,v in tfi.items()}
+        for word,v in vec.items():
             prob[lbl][word] += v
-    total_counts = {k:sum(v.values()) for k,v in prob.iteritems()}
+    total_counts = {k:sum(v.values()) for k,v in prob.items()}
     normz = {c: math.log(1.0/float(total_counts[c]+alpha*n)) for c in total_counts}
     alphas = {}
-    for c,v in prob.iteritems():
-        for word,weight in v.iteritems():
+    for c,v in prob.items():
+        for word,weight in v.items():
             prob[c][word] = math.log(weight+alpha)
     theta = prob
     def returnScores(text,tkn,model,idf,alphas):
@@ -136,19 +136,19 @@ if __name__ == '__main__':
             tfi[token] += 1.0
         for token in tokens:
             tfi[token] = math.log(tfi[token]) + 1.0
-        vec = {k: v*idf[k] for k,v in tfi.iteritems()}
+        vec = {k: v*idf[k] for k,v in tfi.items()}
 
         scores = {}
         for c in model:
             scores[c] = sum([vec[k]*(model[c][k]+normz[c]) for k in vec])
         maxs = max(scores.values())
-        expsum = sum([math.exp(x-maxs) for x in scores.values()])
+        expsum = sum([math.exp(x-maxs) for x in list(scores.values())])
         total_score = math.log(expsum) if expsum != 0  else 0.0
-        scores = sorted([(math.exp(v-total_score-maxs),k) for k,v in scores.iteritems()])[::-1]
+        scores = sorted([(math.exp(v-total_score-maxs),k) for k,v in scores.items()])[::-1]
         return scores
     for load_manual in [True,False]:
         if load_manual:
-            with open(manual_filename,'rb') as fp:
+            with open(manual_filename,'rt') as fp:
                 md = json.load(fp)
             test_label = []
             test_data = []
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                 test_label.append(name.lower())
                 test_data.append(md[name])
         else:
-            with open(wiki_filename,'rb') as fp:
+            with open(wiki_filename,'rt') as fp:
                 wd = json.load(fp)
             test_label = []
             test_data = []
@@ -175,7 +175,7 @@ if __name__ == '__main__':
                     top_5+=1
                 total+=1
         dataset = 'manual' if load_manual else 'wiki'
-        print "{2}\t{0:.2f}\t{1:.2f}".format(float(top_1)/total,float(top_5)/total,dataset)
+        print("{2}\t{0:.2f}\t{1:.2f}".format(float(top_1)/total,float(top_5)/total,dataset))
         for c in theta:
             bad_w = []
             for w in theta[c]:
@@ -184,5 +184,5 @@ if __name__ == '__main__':
             for w in bad_w:
                 theta[c].pop(w, None)
 
-        with gzip.open('data_table.json.gz','wb') as fp:
-            fp.write(json.dumps({'idf':idf,'prob':theta,'norm':normz},sort_keys=True,indent=4, separators=(',', ': ')))
+    with gzip.open('data_table.json.gz','wt') as fp:
+        json.dump({'idf':idf,'prob':theta,'norm':normz},fp,sort_keys=True,indent=4, separators=(',', ': '))
