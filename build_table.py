@@ -139,9 +139,10 @@ if __name__ == '__main__':
         scores = {}
         for c in model:
             scores[c] = sum([vec[k]*(model[c][k]+normz[c]) for k in vec])
-        expsum = sum([math.exp(x) for x in scores.values()])
+        maxs = max(scores.values())
+        expsum = sum([math.exp(x-maxs) for x in scores.values()])
         total_score = math.log(expsum) if expsum != 0  else 0.0
-        scores = sorted([(math.exp(v-total_score),k) for k,v in scores.iteritems()])[::-1]
+        scores = sorted([(math.exp(v-total_score-maxs),k) for k,v in scores.iteritems()])[::-1]
         return scores
     for load_manual in [True,False]:
         if load_manual:
