@@ -1,1 +1,124 @@
-temp
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Doctor Bayes</title>
+    <style>
+        input {
+            text-align: left;
+            font-size: 1.5vw;
+        }
+        table {
+            border-collapse: collapse;
+            width: 40vw;
+            text-align: center;
+        }
+    </style>
+
+    <script type="text/javascript">
+        var prob;
+        var idf;
+        var norm;
+        var examples = ['Severe headache, fever and a stiff neck','I am sneezing, have a mild fever, and am very congested', 'Difficulty breathing, and a wheezing cough']
+
+        function setExample(value) {
+            document.getElementById("textinput").value = examples[value];
+        }
+        function computeOutput(inputString) {
+            var inputString = document.getElementById("textinput").value.toLowerCase();
+            var reg = new RegExp("\\b\\w\\w+\\b","g");
+            var tokens = [];
+            while (result = reg.exec(inputString)) {
+                if (result in idf) {
+                    tokens.push(result[0])
+                }
+            }
+            var tf = new Object();
+            for (word of tokens) {
+                if (!(word in tf)){
+                    tf[word] = 1.0;
+                } else {
+                    tf[word] = tf[word] + 1.0;
+                }
+            }
+            for (word in tf) {
+                tf[word] = (Math.log(tf[word]) + 1.0)*idf[word];
+            }
+            var scores = new Object();
+            for (c in prob) {
+                var rs = 0.0;
+                for (word in tf) {
+                    ms = (word in prob[c]) ? prob[c][word] : 0.0;
+                    rs = rs + tf[word] * (ms + norm[c]);
+                }
+                scores[c] = rs;
+            }
+            var classes = Object.keys( scores );
+            var scores_arr = classes.map(function ( key ) { return scores[key]; });
+            var scores_max =  Math.max.apply( null, scores_arr );
+            var summed_scores =  Math.log(scores_arr.map(function(a) { return Math.exp(a-scores_max);}).reduce(function(a,b){return a+b;}, 0));
+
+            function getSortedKeys(obj) {
+                var keys = []; for(var key in obj) keys.push(key);
+                return keys.sort(function(a,b){return obj[a]-obj[b]});
+            }
+            var scores_final = scores_arr.map(function(a) {return Math.exp(a-scores_max - summed_scores);});
+            
+            var items = [];
+            for (var i = 0; i < classes.length; i++) {
+                items.push([classes[i], scores_final[i]]);
+            }
+            items.sort(function(first, second) {
+                return second[1] - first[1];
+            });
+            function tableCreate(results){
+                var body = document.getElementById("outputBox"),
+                    tbl  = document.createElement('table');
+                body.innerHTML = "";
+    
+                for(var i = 0; i < results.length; i++){
+                    var tr = tbl.insertRow();
+                    for(var j = 0; j < 2; j++){
+                            var td = tr.insertCell();
+                            var txt = results[i][j];
+                            if (j==1) {
+                                txt = (100*txt).toFixed(1);
+                            }
+                            td.appendChild(document.createTextNode(txt));
+                            td.style.border = '0px solid black';
+                    }
+                }
+                body.appendChild(tbl);
+            }
+            tableCreate(items.slice(0, 5));
+        }
+        document.onreadystatechange = function () {
+            if (document.readyState == "complete") {
+                var xobj = new XMLHttpRequest();
+                xobj.overrideMimeType("application/json");
+                xobj.open('GET', 'data_table.json', false); 
+                xobj.send(null);
+                var data = JSON.parse(xobj.responseText);
+                idf = data['idf'];
+                prob = data['prob'];
+                norm = data['norm'];
+            }
+        }
+    </script>
+</head>
+
+
+<body>
+    <p id='exampleBox' align='center'>
+        <input id="useEx1" type="button" value="Example 1" onclick="setExample(0);computeOutput();" />
+        <input id="useEx2" type="button" value="Example 2" onclick="setExample(1);computeOutput();" />
+        <input id="useEx3" type="button" value="Example 3" onclick="setExample(2);computeOutput();" />
+    </p>
+    <p id='inputBox' align='center'>
+        <input type="text" id="textinput" size="50vw" onclick="this.value =''" onkeypress="computeOutput()">
+    </p>
+    <p id='outputBox' align='center'>
+    </p>
+
+</body>
+</html>

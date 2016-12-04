@@ -51,7 +51,8 @@ if __name__ == '__main__':
     class Tokenizer:
         def __init__(self):
             self.pattern = re.compile(r'(?u)\b\w\w+\b')
-            self.filter = re.compile('.*[a-zA-z]+.*')
+            self.filter = re.compile('[^0-9][a-zA-z]+[^0-9]')
+            #self.filter = re.compile('.*[a-zA-z]+.*')
             with open('stop.json', 'rt') as fp:
                 d = json.load(fp)
                 generalStopWords = d['gen']
