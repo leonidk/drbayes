@@ -41,11 +41,11 @@ if __name__ == '__main__':
     labels = [x[0] for x in data]
     fbV = [x[1] for x in data]
     mayoV = [x[2] for x in data]
-    wikiDesc = [x[3] for x in data]
+    wikiV = [x[3] for x in data]
 
     # create boring data
-    train_label = 2*labels
-    train_data = fbV + mayoV
+    train_label = 3*labels
+    train_data = fbV + mayoV + wikiV
 
     #build tokenizer
     class Tokenizer:
@@ -57,7 +57,7 @@ if __name__ == '__main__':
                 d = json.load(fp)
                 generalStopWords = d['gen']
                 medicalStopWords = d['med']
-                nltkStopWords = d['nltk']  
+                nltkStopWords = d['nltk']
                 unique = set()
                 for word in generalStopWords:
                     unique.add(word.lower())
@@ -69,26 +69,45 @@ if __name__ == '__main__':
             self.vowels = re.compile(".*[aeiou].*")
 
         def run(self,text):
-            # extract 
+            # extract
             res = self.pattern.findall(text.lower())
             # remove alphanumeric
             res = [x for x in res if self.filter.match(x) != None]
-            # stem
-            #res2 = []
-            #for x in res:
-            #    if x[-1] == 's': x = x[:-1]
-            #    if x[-3:] == 'ing' and self.vowels.match(x[:-3]) != None : x = x[:-3]
-            #    if x[-2:] == 'ed' and self.vowels.match(x[:-2]) != None : x = x[:-2]
-            #    if x[-2:] == 'ly' and self.vowels.match(x[:-2]) != None : x = x[:-2]
-            #    if x[-5:] == 'esses': x = x[:-5]
-            #    if x[-3:] == 'ies': x = x[:-2]
-            #    if x[-4:] == 'ness': x = x[:-4]
-            #    if x[-3:] == 'ful': x = x[:-3]
-            #    res2.append(x)
-            #res = res2
-            
             # remove stop
             res = [x for x in res if x not in self.stop]
+            # stem
+            res2 = []
+            for x in res:
+                # eg 1
+                try:
+                    if x[-1] == 's': x = x[:-1]
+                    elif x[-4:] == 'sses': x = x[:-2]
+                    elif x[-3:] == 'ied': x = x[:-2]
+                    elif x[-3:] == 'ies': x = x[:-2]
+
+                    # eg 2
+                    if x[-3:] == 'ing' and self.vowels.match(x[:-3]) != None : x = x[:-3]
+                    elif x[-2:] == 'ed' and self.vowels.match(x[:-2]) != None : x = x[:-2]
+                    elif x[-2:] == 'ly' and self.vowels.match(x[:-2]) != None : x = x[:-2]
+                    # eg 5
+                    if x[-4:] == 'ness': x = x[:-4]
+                    elif x[-3:] == 'ful': x = x[:-3]
+                    elif x[-5:] == 'icate': x = x[:-3]
+
+                    # eg 6
+                    if x[-4:] == 'ance': x = x[:-4]
+                    elif x[-3:] == 'ent': x = x[:-3]
+                    elif x[-3:] == 'ive': x = x[:-3]
+
+                    if x[-1] == 'e': x[:-1]
+                    res2.append(x)
+                except:
+                    pass
+            res = res2
+
+            # remove stop
+            res = [x for x in res if x not in self.stop]
+
             return res
 
     tkn = Tokenizer()
@@ -114,7 +133,7 @@ if __name__ == '__main__':
             res[token] = math.log(res[token]) + 1.0
 
         tf.append(res)
-    
+
     print(len(word_count), len(valid_words))
 
     # learn a classifier
