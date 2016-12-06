@@ -13,7 +13,6 @@
             width: 40vw;
             text-align: center;
             font-size: 3vw;
-
         }
     </style>
 
@@ -31,10 +30,39 @@
             var reg = new RegExp("\\b\\w\\w+\\b","g");
             var tokens = [];
             while (result = reg.exec(inputString)) {
-                if (result in idf) {
-                    tokens.push(result[0])
-                }
+                    var text = result[0];
+                    if ((text.slice(-3) == 'ies') && !(text.slice(-4,1) in {'a':0,'e':0})) {
+                        text = text.slice(0,text.length-3);
+                    }
+                    if ((text.slice(-2) == 'es') && !(text.slice(-3,1) in {'a':0,'e':0,'o':0})) {
+                        text = text.slice(0,text.length-2);
+                    }
+                    if ((text.slice(-1) == 's') && !(text.slice(-2,1) in {'u':0,'s':0})) {
+                        text = text.slice(0,text.length-1);
+                    }
+                    if (text.slice(-2) == 'ly') {
+                        text = text.slice(0,text.length-2);
+                    }
+                    if (text.slice(-3) == 'ing') {
+                        text = text.slice(0,text.length-3);
+                    } else if (text.slice(-2) == 'ed') {
+                        text = text.slice(0,text.length-2);
+                    }
+
+                    if (text.slice(-1) == 'e') {
+                        text = text.slice(0,text.length-1);
+                    }
+                    if (text.slice(-1) == 'i') {
+                        text = text.slice(0,text.length-1);
+                    }
+                    if (text.slice(-1) == 'y') {
+                        text = text.slice(0,text.length-1);
+                    }
+                    if (text in idf) {
+                        tokens.push(text)
+                    }
             }
+            console.log(tokens);
             var tf = new Object();
             for (word of tokens) {
                 if (!(word in tf)){
@@ -46,6 +74,7 @@
             for (word in tf) {
                 tf[word] = (Math.log(tf[word]) + 1.0)*idf[word];
             }
+            console.log(tf);
             var scores = new Object();
             for (c in prob) {
                 var rs = 0.0;
@@ -92,7 +121,11 @@
                 }
                 body.appendChild(tbl);
             }
-            tableCreate(items.slice(0, 5));
+            if(Object.keys(tf).length > 0) {
+                tableCreate(items.slice(0, 5));
+            } else {
+                document.getElementById("outputBox").innerHTML = "Describe your symptoms";
+            }
         }
         document.onreadystatechange = function () {
             if (document.readyState == "complete") {
@@ -120,6 +153,7 @@
         <input type="text" id="textinput" size="50vw" onclick="this.value =''" onkeypress="computeOutput()">
     </p>
     <p id='outputBox' align='center'>
+    Describe your symptoms
     </p>
 
 </body>

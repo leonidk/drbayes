@@ -22,6 +22,32 @@ if __name__ == '__main__':
             res = self.pattern.findall(text.lower())
             # remove alphanumeric
             res = [x for x in res if self.filter.match(x) != None]
+            # stem
+            res2 = []
+            for x in res:
+                if len(x) > 3 and x[-3:] == 'ies' and (x[-4] not in ['a','e']):
+                    x = x[:-3]
+                elif len(x) > 2 and x[-2:] == 'es' and (x[-3] not in ['a','e','o']):
+                    x = x[:-2]
+                elif len(x) > 1 and x[-1:] == 's' and (x[-2] not in ['u','s']):
+                    x = x[:-1]
+                if len(x) >= 2 and x[-2:] == 'ly':
+                    x = x[:-2]
+                if len(x) >= 3 and x[-3:] == 'ing':
+                    x = x[:-3]
+                elif len(x) >= 2 and x[-2:] == 'ed':
+                    x = x[:-2]
+                if len(x) > 0 and x[-1] == 'e':
+                    x = x[:-1]
+                if len(x) > 0 and x[-1] == 'y':
+                    x = x[:-1]
+                if len(x) > 0 and x[-1] == 'i':
+                    x = x[:-1]
+                if len(x) > 0:
+                    res2.append(x)
+            res = res2
+
+            # remove stop
             return res
 
     tkn = Tokenizer()

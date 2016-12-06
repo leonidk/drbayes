@@ -14,8 +14,10 @@ if __name__ == '__main__':
     manual_filename = 'manual_test.json'
     wiki_filename = 'wikidev.json'
 
-    min_freq = 0.001
-    max_freq = 0.09
+    #min_freq = 0.001
+    #max_freq = 0.09
+    min_num = 3
+    max_num = 2000
     with open(items_filename,mode='rt') as fp:
         items = json.load(fp)
     data = []
@@ -44,8 +46,8 @@ if __name__ == '__main__':
     wikiV = [x[3] for x in data]
 
     # create boring data
-    train_label = 3*labels
-    train_data = fbV + mayoV + wikiV
+    train_label = 2*labels
+    train_data = fbV + mayoV# + wikiV
 
     #build tokenizer
     class Tokenizer:
@@ -78,31 +80,26 @@ if __name__ == '__main__':
             # stem
             res2 = []
             for x in res:
-                # eg 1
-                try:
-                    if x[-1] == 's': x = x[:-1]
-                    elif x[-4:] == 'sses': x = x[:-2]
-                    elif x[-3:] == 'ied': x = x[:-2]
-                    elif x[-3:] == 'ies': x = x[:-2]
-
-                    # eg 2
-                    if x[-3:] == 'ing' and self.vowels.match(x[:-3]) != None : x = x[:-3]
-                    elif x[-2:] == 'ed' and self.vowels.match(x[:-2]) != None : x = x[:-2]
-                    elif x[-2:] == 'ly' and self.vowels.match(x[:-2]) != None : x = x[:-2]
-                    # eg 5
-                    if x[-4:] == 'ness': x = x[:-4]
-                    elif x[-3:] == 'ful': x = x[:-3]
-                    elif x[-5:] == 'icate': x = x[:-3]
-
-                    # eg 6
-                    if x[-4:] == 'ance': x = x[:-4]
-                    elif x[-3:] == 'ent': x = x[:-3]
-                    elif x[-3:] == 'ive': x = x[:-3]
-
-                    if x[-1] == 'e': x[:-1]
+                if len(x) > 3 and x[-3:] == 'ies' and (x[-4] not in ['a','e']):
+                    x = x[:-3]
+                elif len(x) > 2 and x[-2:] == 'es' and (x[-3] not in ['a','e','o']):
+                    x = x[:-2]
+                elif len(x) > 1 and x[-1:] == 's' and (x[-2] not in ['u','s']):
+                    x = x[:-1]
+                if len(x) >= 2 and x[-2:] == 'ly':
+                    x = x[:-2]
+                if len(x) >= 3 and x[-3:] == 'ing':
+                    x = x[:-3]
+                elif len(x) >= 2 and x[-2:] == 'ed':
+                    x = x[:-2]
+                if len(x) > 0 and x[-1] == 'e':
+                    x = x[:-1]
+                if len(x) > 0 and x[-1] == 'y':
+                    x = x[:-1]
+                if len(x) > 0 and x[-1] == 'i':
+                    x = x[:-1]
+                if len(x) > 0:
                     res2.append(x)
-                except:
-                    pass
             res = res2
 
             # remove stop
@@ -114,11 +111,12 @@ if __name__ == '__main__':
     #get words that appear in enough and not too many documents
     word_count = defaultdict(float)
     num_doc = len(train_data)
-    for doc in train_data:
+    for doc in fbV + mayoV:
         for x in set(tkn.run(doc)):
             word_count[x] += 1.0
     valid = {k:v for k,v in word_count.items()\
-                   if (v >= min_freq*num_doc) and (v <= max_freq*num_doc)}
+                   if (v >= min_num) and (v <= max_num)}
+    #               if (v >= min_freq*num_doc) and (v <= max_freq*num_doc)}
     valid_words = list(valid.keys())
     #build idf
     idf = {k:math.log((1.0+num_doc)/v+1.0)+1.0 for k,v in valid.items()}
