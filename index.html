@@ -62,7 +62,6 @@
                         tokens.push(text)
                     }
             }
-            console.log(tokens);
             var tf = new Object();
             for (word of tokens) {
                 if (!(word in tf)){
@@ -74,7 +73,6 @@
             for (word in tf) {
                 tf[word] = (Math.log(tf[word]) + 1.0)*idf[word];
             }
-            console.log(tf);
             var scores = new Object();
             for (c in prob) {
                 var rs = 0.0;
