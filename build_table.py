@@ -205,4 +205,4 @@ if __name__ == '__main__':
                 theta[c].pop(w, None)
 
     with gzip.open('data_table.json.gz','wt') as fp:
-        json.dump({'idf':idf,'prob':theta,'norm':normz},fp,sort_keys=True,indent=4, separators=(',', ': '))
+        json.dump({'idf':idf,'prob':theta,'norm':normz,'stop':tkn.stop},fp,sort_keys=True,indent=4, separators=(',', ': '))

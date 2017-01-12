@@ -13,15 +13,18 @@ import codecs
 if __name__ == '__main__':
     #build tokenizer
     class Tokenizer:
-        def __init__(self):
+        def __init__(self,stop,valid):
             self.pattern = re.compile(r'(?u)\b\w\w+\b')
             self.filter = re.compile('.*[a-zA-z]+.*')
-
+            self.stop = stop
+            self.valid = valid
         def run(self,text):
             # extract 
             res = self.pattern.findall(text.lower())
             # remove alphanumeric
             res = [x for x in res if self.filter.match(x) != None]
+            # remove stop
+            res = [x for x in res if x not in self.stop]
             # stem
             res2 = []
             for x in res:
@@ -48,14 +51,15 @@ if __name__ == '__main__':
             res = res2
 
             # remove stop
-            return res
+            return [x for x in res if x in self.valid]
 
-    tkn = Tokenizer()
     with gzip.open('data_table.json.gz',mode='rt') as fp:
         data = json.load(fp)
     idf = data['idf']
     model = data['prob']
     norm = data['norm']
+    stop = data['stop']
+    tkn = Tokenizer(stop,idf.keys())
     valid_words = list(idf.keys())
 
     def returnScores(text,tkn,model,idf,norm):

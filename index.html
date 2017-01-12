@@ -20,6 +20,7 @@
         var prob;
         var idf;
         var norm;
+        var stop_words;
         var examples = ['Severe headache, fever and a stiff neck','I am sneezing, have a mild fever, and am very congested', 'Difficulty breathing, and a wheezing cough']
 
         function setExample(value) {
@@ -31,36 +32,38 @@
             var tokens = [];
             while (result = reg.exec(inputString)) {
                     var text = result[0];
-                    if ((text.slice(-3) == 'ies') && !(text.slice(-4,1) in {'a':0,'e':0})) {
-                        text = text.slice(0,text.length-3);
-                    }
-                    if ((text.slice(-2) == 'es') && !(text.slice(-3,1) in {'a':0,'e':0,'o':0})) {
-                        text = text.slice(0,text.length-2);
-                    }
-                    if ((text.slice(-1) == 's') && !(text.slice(-2,1) in {'u':0,'s':0})) {
-                        text = text.slice(0,text.length-1);
-                    }
-                    if (text.slice(-2) == 'ly') {
-                        text = text.slice(0,text.length-2);
-                    }
-                    if (text.slice(-3) == 'ing') {
-                        text = text.slice(0,text.length-3);
-                    } else if (text.slice(-2) == 'ed') {
-                        text = text.slice(0,text.length-2);
-                    }
+                    if (stop_words.indexOf(text) == -1) {
+                        if ((text.slice(-3) == 'ies') && !(text.slice(-4,1) in {'a':0,'e':0})) {
+                            text = text.slice(0,text.length-3);
+                        }
+                        if ((text.slice(-2) == 'es') && !(text.slice(-3,1) in {'a':0,'e':0,'o':0})) {
+                            text = text.slice(0,text.length-2);
+                        }
+                        if ((text.slice(-1) == 's') && !(text.slice(-2,1) in {'u':0,'s':0})) {
+                            text = text.slice(0,text.length-1);
+                        }
+                        if (text.slice(-2) == 'ly') {
+                            text = text.slice(0,text.length-2);
+                        }
+                        if (text.slice(-3) == 'ing') {
+                            text = text.slice(0,text.length-3);
+                        } else if (text.slice(-2) == 'ed') {
+                            text = text.slice(0,text.length-2);
+                        }
 
-                    if (text.slice(-1) == 'e') {
-                        text = text.slice(0,text.length-1);
-                    }
-                    if (text.slice(-1) == 'i') {
-                        text = text.slice(0,text.length-1);
-                    }
-                    if (text.slice(-1) == 'y') {
-                        text = text.slice(0,text.length-1);
-                    }
-                    if (text in idf) {
-                        tokens.push(text)
-                    }
+                        if (text.slice(-1) == 'e') {
+                            text = text.slice(0,text.length-1);
+                        }
+                        if (text.slice(-1) == 'i') {
+                            text = text.slice(0,text.length-1);
+                        }
+                        if (text.slice(-1) == 'y') {
+                            text = text.slice(0,text.length-1);
+                        }
+                        if (text in idf) {
+                            tokens.push(text)
+                        }
+                }
             }
             var tf = new Object();
             for (word of tokens) {
@@ -135,6 +138,7 @@
                 idf = data['idf'];
                 prob = data['prob'];
                 norm = data['norm'];
+                stop_words = data['stop'];
             }
         }
     </script>
@@ -148,7 +152,7 @@
         <input id="useEx3" type="button" value="Example 3" onclick="setExample(2);computeOutput();" />
     </p>
     <p id='inputBox' align='center'>
-        <input type="text" id="textinput" size="50vw" onclick="this.value =''" onkeypress="computeOutput()">
+        <input type="text" id="textinput" size="50vw" onclick="this.value =''" onkeyup="computeOutput()">
     </p>
     <p id='outputBox' align='center'>
     Describe your symptoms
